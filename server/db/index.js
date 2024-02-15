@@ -1,47 +1,87 @@
-const connect = require('@databases/sqlite');
-const {sql} = require('@databases/sqlite');
-
-// We don't pass a file name here because we don't want to store
-// anything on disk
+const connect = require("@databases/sqlite");
+const { sql } = require("@databases/sqlite");
 const db = connect();
 
-async function prepare() {
-  await db.query(sql`
+//create tables
+async function initialTables() {
+  try {
+    await db.query(sql`
     CREATE TABLE IF NOT EXISTS rooms (
       id VARCHAR NOT NULL PRIMARY KEY,
-      value VARCHAR NOT NULL
+      name VARCHAR NOT NULL UNIQUE,
+      code VARCHAR(N) NOT NULL CHECK(length(code) >= 6 AND length(code) <= 15) UNIQUE,
+      roomState INTEGER DEFAULT 0 CHECK(roomState IN (0, 1)),
+      questionCount INTEGER DEFAULT 5 CHECK(questionCount > 2 AND questionCount < 31),
+      execut_time INTEGER DEFAULT 10 CHECK(execut_time > 4 AND execut_time < 36),
+      created_at INTEGER DEFAULT CURRENT_TIMESTAMP
     );
   `);
-  await db.query(sql`
+
+    await db.query(sql`
     CREATE TABLE IF NOT EXISTS users (
       id VARCHAR NOT NULL PRIMARY KEY,
-      value VARCHAR NOT NULL
+      name VARCHAR NOT NULL,
+      status VARCHAR NOT NULL CHECK(status IN ('owner', 'player')),
+      correct_ans INTEGER DEFAULT 0,
+      wrong_ans INTEGER DEFAULT 0,
+      currentRoomId VARCHAR REFERENCES rooms(id) ON DELETE SET NULL,
+      FOREIGN KEY (currentRoomId) REFERENCES rooms(id) ON UPDATE CASCADE
+      join_at INTEGER DEFAULT CURRENT_TIMESTAMP,
     );
   `);
-}
-
-const prepared = prepare();
-
-async function set(id, value) {
-  await prepared;
-  await db.query(sql`
-    INSERT INTO app_data (id, value)
-      VALUES (${id}, ${value})
-    ON CONFLICT (id) DO UPDATE
-      SET value=excluded.value;
-  `);
-}
-
-async function get(id) {
-  await prepared;
-  const results = await db.query(sql`
-    SELECT value FROM app_data WHERE id=${id};
-  `);
-  if (results.length) {
-    return results[0].value;
-  } else {
-    return undefined;
+  } catch (error) {
+    console.log(error);
   }
+}
+
+async function addRoom(id, name, code, questionCount, execut_time = 10) {
+  try {
+    await db.query(sql`INSERT INTO rooms 
+      (id, name, code, questionCount, execut_time) VALUES 
+      (${id}, ${name}, ${code}, ${questionCount}, ${execut_time});`);
+  } catch (error) {
+    console.log(error);
+  }
+}
+async function addUser(id, name, status, currentRoomId) {
+  try {
+    await db.query(sql`INSERT INTO users 
+      (id, name, status, currentRoomId) VALUES 
+      (${id}, ${name}, ${status}, ${currentRoomId});`);
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+async function getRooms(id, code) {
+  const query = sql`SELECT * FROM rooms`;
+  if (id) {
+    query.append(sql`WHERE id = ${id}`);
+  } else if (code) {
+    query.append(sql`WHERE code = ${code}`);
+  }
+  return db.any(query);
+  // const results = await db.query(sql` SELECT value FROM app_data WHERE id=${id};`);
+  // if (results.length) {
+  //   return results[0].value;
+  // } else {
+  //   return undefined;
+  // }
+}
+async function getUser(id, code) {
+  const query = sql`SELECT * FROM rooms`;
+  if (id) {
+    query.append(sql`WHERE id = ${id}`);
+  } else if (code) {
+    query.append(sql`WHERE code = ${code}`);
+  }
+  return db.any(query);
+  // const results = await db.query(sql` SELECT value FROM app_data WHERE id=${id};`);
+  // if (results.length) {
+  //   return results[0].value;
+  // } else {
+  //   return undefined;
+  // }
 }
 
 async function remove(id) {
@@ -51,19 +91,20 @@ async function remove(id) {
   `);
 }
 
-async function run() {
-  console.log(await get('name'));
-  await set('name', 'Forbes');
-  console.log(await get('name'));
-  await set('name', 'Forbes Lindesay');
-  console.log(await get('name'));
-  remove('name');
-}
-run().catch((ex) => {
-  console.error(ex.stack);
-  process.exit(1);
-});
+// async function run() {
+//   console.log(await get('name'));
+//   await set('name', 'Forbes');
+//   console.log(await get('name'));
+//   await set('name', 'Forbes Lindesay');
+//   console.log(await get('name'));
+//   remove('name');
+// }
+// run().catch((ex) => {
+//   console.error(ex.stack);
+//   process.exit(1);
+// });
 
+export { initialTables, addRoom, addUser };
 
 // const { v4: uuidv4 } = require('uuid');
 // class Game {
@@ -126,8 +167,8 @@ run().catch((ex) => {
 //     }
 
 //     createRooms(creater, name, code){
-//         if(this.isExistRoomByName(name)) return { userError: {ok: false, error: "The room name already exists."}}; 
-//         if(this.isExistRoomByCode(code)) return {userError: {ok: false, error: "The room code already exists."}}; 
+//         if(this.isExistRoomByName(name)) return { userError: {ok: false, error: "The room name already exists."}};
+//         if(this.isExistRoomByCode(code)) return {userError: {ok: false, error: "The room code already exists."}};
 
 //         const id = this.generateId()
 //         let newRoom = {
@@ -138,12 +179,12 @@ run().catch((ex) => {
 //             roomState: false,
 //             players: [{name: creater, id: id, status: "owner"}]
 //         }
-    
+
 //         this.rooms.push(newRoom);
 //         return {
 //             roomData: {
-//                 roomcode: newRoom.code, 
-//                 roomname: newRoom.name, 
+//                 roomcode: newRoom.code,
+//                 roomname: newRoom.name,
 //                 user: {name: creater, id: id, status: "owner"}
 //             }
 //         };
@@ -153,7 +194,7 @@ run().catch((ex) => {
 //         const createrIndex = this.rooms[roomIndex].players.findIndex(r=>r.id==createrId);
 //         this.rooms[roomIndex].players[createrIndex].socketId = socketId;
 //     }
-    
+
 //     joinRoom(code, name){
 //         if(this.rooms.length==0)  return {userError: {ok: false, error: "There is no available game."}};
 //         if(!this.isExistRoomByCode(code)) return {userError: {ok: false, error: "No such room"}};
@@ -163,11 +204,11 @@ run().catch((ex) => {
 //         let playerIndex = this.rooms.findIndex((r)=> r.code === code)
 //         if(this.rooms[playerIndex].roomState) return {userError: {ok: false, error: "This room games already started"}};
 //         this.rooms[playerIndex].players.push({name: name, id: id, status: "player"})
-//         return  { 
-//             users: this.rooms[playerIndex].players, 
+//         return  {
+//             users: this.rooms[playerIndex].players,
 //             roomData: {
-//                 roomcode: this.rooms[playerIndex].code, 
-//                 roomname: this.rooms[playerIndex].name, 
+//                 roomcode: this.rooms[playerIndex].code,
+//                 roomname: this.rooms[playerIndex].name,
 //                 user: {name: name, id: id, status: "player"}
 //             }};
 //     }
@@ -183,7 +224,7 @@ run().catch((ex) => {
 //         if(this.isExistRoomByUserName(creator, code)[0].status !=="owner") return {userError: {ok: false, error: "Only the owner can start a game."}};
 //         let roomIndex = this.rooms.findIndex((r)=> r.code === code)
 //         if (this.rooms[roomIndex].roomState) return {userError: {ok: false, error:"This room game already started"}};
-//         this.rooms[roomIndex].roomState = true 
+//         this.rooms[roomIndex].roomState = true
 //         return true;
 //     }
 
