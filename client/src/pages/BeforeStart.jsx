@@ -1,13 +1,16 @@
-import React, { useState } from "react";
+import {disconnect} from '../socket'
 
 export default function BeforeStart(props) {
   const { data, setData, users, setUsers} = props;
   const logout = () => {
     // eslint-disable-next-line no-restricted-globals
     if(confirm("Would do you like leave the room ?")){
+      window.localStorage.removeItem("game_data")
+      window.location.reload();
+      
       setData("")
       setUsers([])
-      window.localStorage.removeItem("game_data")
+      disconnect()
     }
   }
   return (

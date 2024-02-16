@@ -8,19 +8,23 @@ export default function Regis() {
     username: "",
     roomname: "",
     roomcode: "",
+    questionCount: 5,
+    execut_time: 10,
   });
-  
+
   const submitForm = () => {
     if (roomConfigs.username.length < 3 || roomConfigs.roomcode.length < 5) {
       return toast.error("Some inputs is invalid");
     }
-    if(roomType === "create" && roomConfigs.roomname.length < 4){
+    if (roomType === "create" && roomConfigs.roomname.length < 4) {
       return toast.error("Room name is invalid");
     }
-    if(roomType === "create") 
-      createGame({...roomConfigs});
+    if (roomType === "create") createGame({ ...roomConfigs });
     else
-      joinGame({roomcode: roomConfigs.roomcode, username: roomConfigs.username})
+      joinGame({
+        roomcode: roomConfigs.roomcode,
+        username: roomConfigs.username,
+      });
   };
 
   return (
@@ -76,14 +80,14 @@ export default function Regis() {
               </div>
               {roomType === "create" ? (
                 <div className="mb-3 mt-2">
-                  <label htmlFor="exampleInputUsername" className="form-label">
+                  <label htmlFor="exampleInputRoomName" className="form-label">
                     Room name <i className="text-danger">*</i>
                   </label>
                   <input
                     type="text"
                     className="form-control"
                     required={true}
-                    id="exampleInputUsername"
+                    id="exampleInputRoomName"
                     placeholder="room name..."
                     value={roomConfigs.roomname}
                     onChange={(v) =>
@@ -99,14 +103,14 @@ export default function Regis() {
                 <></>
               )}
               <div className="mb-3 mt-2">
-                <label htmlFor="exampleInputUsername" className="form-label">
+                <label htmlFor="exampleInputRoomCode" className="form-label">
                   Room code <i className="text-danger">*</i>
                 </label>
                 <input
                   type="text"
                   className="form-control"
                   required={true}
-                  id="exampleInputUsername"
+                  id="exampleInputRoomCode"
                   placeholder="1a2b3c..."
                   value={roomConfigs.roomcode}
                   onChange={(v) =>
@@ -115,6 +119,62 @@ export default function Regis() {
                   name="roomcode"
                 />
               </div>
+              {roomType === "create" ? (
+                <div className="row">
+                  <div className="col mb-3 mt-2">
+                    <label
+                      htmlFor="exampleInputQuestionCount"
+                      className="form-label"
+                    >
+                      Question count <i className="text-danger">*</i>
+                    </label>
+                    <input
+                      type="number"
+                      min={3}
+                      max={30}
+                      className="form-control"
+                      required={true}
+                      id="exampleInputQuestionCount"
+                      placeholder="question count (number)..."
+                      value={roomConfigs.questionCount}
+                      onChange={(v) =>
+                        setRoomConfigs({
+                          ...roomConfigs,
+                          questionCount: v.target.value,
+                        })
+                      }
+                      name="questionCount"
+                    />
+                  </div>
+                  <div className="col mb-3 mt-2">
+                    <label
+                      htmlFor="exampleInputTymer"
+                      className="form-label"
+                    >
+                      Taymer <i className="text-danger">*</i>
+                    </label>
+                    <input
+                      type="number"
+                      min={5}
+                      max={35}
+                      className="form-control"
+                      required={true}
+                      id="exampleInputTymer"
+                      placeholder="test execution time (number)..."
+                      value={roomConfigs.execut_time}
+                      onChange={(v) =>
+                        setRoomConfigs({
+                          ...roomConfigs,
+                          execut_time: v.target.value,
+                        })
+                      }
+                      name="roomname"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <></>
+              )}
               <button
                 type="button"
                 className="btn btn-primary"

@@ -29,6 +29,7 @@ module.exports = (io) => {
           questionCount,
           execut_time
         );
+        console.log(roomcode, roomname, questionCount, execut_time, username);
         if (addedRoom) {
           addUser(socket.id, username, "owner", addedRoom).then(() => {
             socket.join(roomcode);
@@ -92,8 +93,13 @@ module.exports = (io) => {
         const roomId = leavedUser[0]?.currentRoomId;
         await removeUser(socket.id);
         const users = await getUser(null, null, roomId);
-        const roomcode = await getRooms(roomId);
-        io.of("/api/game").in(roomcode[0].code).emit("leaveGame", users);
+        if(users?.length > 0){
+          const roomcode = await getRooms(roomId);
+          io.of("/api/game").in(roomcode[0].code).emit("leaveGame", users);
+        }else{
+          //if all user left in room
+          await removeRoom(roomId);
+        }
       }
       console.log("disconnected:", socket.id);
     });

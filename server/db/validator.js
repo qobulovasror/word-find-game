@@ -5,8 +5,8 @@ const createReqVal = (data) => {
     const validatorSchema = Joi.object({
         roomcode: Joi.string().required().min(6).max(15),
         roomname: Joi.string().required().min(4).max(50),
-        questionCount: Joi.string().min(3).max(30),
-        execut_time: Joi.string().min(5).max(35),
+        questionCount: Joi.number().min(3).max(30),
+        execut_time: Joi.number().min(5).max(35),
         username: Joi.string().required().min(3)
     })
     return validatorSchema.validate(data);
