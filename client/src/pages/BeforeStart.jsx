@@ -2,11 +2,6 @@ import React, { useState } from "react";
 
 export default function BeforeStart(props) {
   const { data, setData, users, setUsers} = props;
-  // useEffect(()=>{ 
-  //   setUsers([{...data.creater, status: "owner"}])
-  // }, [])
-  // console.log(data);
-
   const logout = () => {
     // eslint-disable-next-line no-restricted-globals
     if(confirm("Would do you like leave the room ?")){

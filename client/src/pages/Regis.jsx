@@ -2,8 +2,7 @@ import { useState } from "react";
 import { toast } from "react-toastify";
 import { createGame, joinGame } from "../socket";
 
-export default function Regis(props) {
-  const {setData} = props;
+export default function Regis() {
   const [roomType, setRoomType] = useState("join"); //create | join
   const [roomConfigs, setRoomConfigs] = useState({
     username: "",
@@ -21,46 +20,9 @@ export default function Regis(props) {
     if(roomType === "create") 
       createGame({...roomConfigs});
     else
-    joinGame({roomcode: roomConfigs.roomcode, username: roomConfigs.username})
+      joinGame({roomcode: roomConfigs.roomcode, username: roomConfigs.username})
   };
 
-  const createGameReq = () => {
-    // fetch("http://localhost:5000/api/startgame/create", {
-    //   method: "POST",
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify({ ...roomConfigs})
-    // }).then(response=>{
-    //   response.json().then(res=>{
-    //     if(!res.ok && res.error) {
-    //       return toast.error(res.error);
-    //     }
-    //     window.localStorage.setItem("game_data", JSON.stringify(res));
-    //     toast.success("Room successful created");
-    //     setData(res);
-    //   })
-    // }).catch(err=>{
-    //   console.log(err);
-    // })
-  }
-
-  const joinGameReq = () => {
-    // fetch("http://localhost:5000/api/startgame/join", {
-    //   method: "POST",
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify({username: roomConfigs.username, roomcode: roomConfigs.roomcode})
-    // }).then(response=>{
-    //   response.json().then(res=>{
-    //     if(!res.ok && res.error) {
-    //       return toast.error(res.error);
-    //     }
-    //     window.localStorage.setItem("game_data", JSON.stringify(res));
-    //     toast.success("Room successful created");
-    //     setData(res);
-    //   })
-    // }).catch(err=>{
-    //   console.log(err);
-    // })
-  }
   return (
     <>
       <div className="conatainer">

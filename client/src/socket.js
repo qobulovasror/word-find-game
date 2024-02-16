@@ -8,7 +8,9 @@ const initiateConnect = () => {
   socket = io(URL, {
     transports: ["websocket"],
   });
-  console.log(`Connecting socket...`);
+  socket.on("connect", () => {
+    console.log(`Connecting socket...`);
+  });
 };
 const disconnect = () => {
   console.log("Disconnecting socket...");
@@ -21,21 +23,55 @@ const desConnection = (discFun) => {
   });
 };
 
+const subscribeBeforeStartEvents = (subAddUsr) => {
+  if (!socket) return false;
+  socket.on("errMsg", (errData) => {
+    return subAddUsr(errData);
+  });
+  socket.on("gameSuccCreate", (resData) => {
+    return subAddUsr(null, "gameSuccCreate", resData);
+  });
+  socket.on("gameSuccJoined", (resData) => {
+    return subAddUsr(null, "gameSuccJoined", resData);
+  });
+  socket.on("addedUser", (resData) => {
+    return subAddUsr(null, "addedUser", resData);
+  });
+};
+
+const subscribeAfterStartEvents = (subAfterEv) => {
+  if (!socket) return false;
+  // socket.on("question", (resData) => {
+  //   return subAfterEv(null, "gameSuccJoined", resData);
+  // });
+  socket.on("startGame", (resData) => {
+    return subAfterEv(null, "startGame", resData);
+  });
+
+  // socket.on("endGame", (resData) => {
+  //   return subAfterEv(null, "addedUser", resData);
+  // });
+};
+
 const createGame = (data) => {
   if (!socket) return false;
-  socket.on("connect", () => {
-    socket.emit("createGame", data);
-  });
+  socket.emit("createGame", data);
 };
 
 const joinGame = (data) => {
   if (!socket) return false;
-  socket.on("connect", () => {
-    socket.emit("join", data);
-  });
+  socket.emit("join", data);
 };
 
-export { initiateConnect, disconnect, desConnection, createGame, joinGame };
+export {
+  initiateConnect,
+  disconnect,
+  desConnection,
+  subscribeBeforeStartEvents,
+  subscribeAfterStartEvents,
+  createGame,
+  joinGame,
+};
 
 // const enterRoom = (data) => {
 //   if (data.user.status === "owner") {
@@ -52,16 +88,6 @@ export { initiateConnect, disconnect, desConnection, createGame, joinGame };
 //       roomcode: data.roomcode,
 //     });
 //   }
-// };
-
-// const subscribeAddedUser = (subAddUsr) => {
-//   if (!socket) return false;
-//   socket.on("connect", () => {
-//     console.log("Socket connected. Registering addedUser listener.");
-//     socket.on("addedUser", (resData) => {
-//       subAddUsr(null, resData);
-//     });
-//   });
 // };
 
 // const subscribeStartGame = (cb) => {

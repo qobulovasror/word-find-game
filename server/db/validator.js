@@ -52,8 +52,21 @@ const joinGameValidator = async (data) => {
     return {};
 }
 
+const startGameFromOwner = async (userId) => {
+    const isAdmin = await getUser(userId);
+    if(!(isAdmin && isAdmin[0]?.status == "owner")) 
+        return {error: {details: [{message: 'You are not creator'}]}}
+    
+    const isAlreadyNotStart = await getRooms(isAdmin[0]?.currentRoomId);
+    if(!(isAlreadyNotStart && isAlreadyNotStart[0].roomState == 0)) 
+        return {error: {details: [{message: 'This room alredy started'}]}}
+
+    return {room: isAlreadyNotStart[0]}
+}
+
 
 module.exports = {
     createVaidator,
-    joinGameValidator
+    joinGameValidator,
+    startGameFromOwner
 }

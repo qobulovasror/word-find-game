@@ -6,8 +6,9 @@ const {
   getUser,
   removeUser,
   removeRoom,
+  startRoomGame
 } = require("../db/index");
-const { createVaidator, joinGameValidator } = require("../db/validator");
+const { createVaidator, joinGameValidator, startGameFromOwner } = require("../db/validator");
 
 module.exports = (io) => {
   io.of("/api/game").on("connection", async (socket) => {
@@ -31,7 +32,12 @@ module.exports = (io) => {
         if (addedRoom) {
           addUser(socket.id, username, "owner", addedRoom).then(() => {
             socket.join(roomcode);
-            socket.emit("gameSuccCreate", addedRoom);
+            socket.emit("gameSuccCreate", {
+              roomcode: roomcode,
+              roomname: roomname,
+              user: { name: username, id: socket.id, status: "owner" },
+            });
+            io.of("/api/game").in(roomcode).emit("addedUser", [{name: username, id: socket.id, status: "owner" }]);
           });
         }
       } catch (error) {
@@ -55,21 +61,39 @@ module.exports = (io) => {
         addedRoomId[0].id
       );
       if (addeduserId) {
+        socket.emit("gameSuccJoined", {
+          roomcode: roomcode,
+          roomname: addedRoomId[0].name,
+          user: { name: username, id: socket.id, status: "player" },
+        });
+
         socket.join(roomcode);
         const users = await getUser(null, null, addedRoomId[0].id);
         io.of("/api/game").in(roomcode).emit("addedUser", users);
       }
+
+      
+    });
+
+    socket.on("startGame", async (data) => {
+      const validRes = await startGameFromOwner(userId);
+      if (validRes.error) {
+        return socket.emit("errMsg", validRes.error.details[0].message);
+      }
+      const room = validRes.room;
+      await startRoomGame(room.id);
+      io.of("/api/game").in(room.code).emit("startGame", users);
     });
 
     // Socket yopilganda
     socket.on("disconnect", async () => {
       const leavedUser = await getUser(socket.id);
-      if (leavedUser.length > 0) {
+      if (leavedUser?.length > 0) {
         const roomId = leavedUser[0]?.currentRoomId;
-        await removeUser(socket.id)
+        await removeUser(socket.id);
         const users = await getUser(null, null, roomId);
-        const roomcode = await getRooms(roomId)
-        io.of("/api/game").in(roomcode[0].code).emit("addedUser", users);
+        const roomcode = await getRooms(roomId);
+        io.of("/api/game").in(roomcode[0].code).emit("leaveGame", users);
       }
       console.log("disconnected:", socket.id);
     });

@@ -109,6 +109,15 @@ async function getUser(id, name, currentRoomId) {
   }
 }
 
+async function startRoomGame(id) {
+  await db.query(sql`
+    UPDATE rooms
+      SET (roomState)
+      = ('1')
+      WHERE id=${id}
+  `);
+}
+
 // update data non finished
 async function updateRoom(id, ...data) {
   try {
@@ -144,6 +153,7 @@ module.exports = {
   getUser,
   removeRoom,
   removeUser,
+  startRoomGame,
 };
 
 // async function run() {
