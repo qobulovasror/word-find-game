@@ -64,13 +64,12 @@ module.exports = (io) => {
     // Socket yopilganda
     socket.on("disconnect", async () => {
       const leavedUser = await getUser(socket.id);
-      console.log(leavedUser.length);
       if (leavedUser.length > 0) {
         const roomId = leavedUser[0]?.currentRoomId;
-        console.log(roomId);
+        await removeUser(socket.id)
         const users = await getUser(null, null, roomId);
         const roomcode = await getRooms(roomId)
-        io.of("/api/game").in(roomcode[0].id).emit("addedUser", users);
+        io.of("/api/game").in(roomcode[0].code).emit("addedUser", users);
       }
       console.log("disconnected:", socket.id);
     });

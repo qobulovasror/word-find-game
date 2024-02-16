@@ -133,6 +133,7 @@ async function removeUser(id) {
   await db.query(sql`
     DELETE FROM users WHERE id=${id};
   `);
+  return id;
 }
 
 module.exports = {
