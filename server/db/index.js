@@ -1,3 +1,4 @@
+const { v4: uuidv4 } = require("uuid");
 const connect = require("@databases/sqlite");
 const { sql } = require("@databases/sqlite");
 const db = connect();
@@ -9,7 +10,7 @@ async function initialTables() {
     CREATE TABLE IF NOT EXISTS rooms (
       id VARCHAR NOT NULL PRIMARY KEY,
       name VARCHAR NOT NULL UNIQUE,
-      code VARCHAR(N) NOT NULL CHECK(length(code) >= 6 AND length(code) <= 15) UNIQUE,
+      code VARCHAR NOT NULL CHECK(length(code) >= 6 AND length(code) <= 15) UNIQUE,
       roomState INTEGER DEFAULT 0 CHECK(roomState IN (0, 1)),
       questionCount INTEGER DEFAULT 5 CHECK(questionCount > 2 AND questionCount < 31),
       execut_time INTEGER DEFAULT 10 CHECK(execut_time > 4 AND execut_time < 36),
@@ -20,76 +21,129 @@ async function initialTables() {
     await db.query(sql`
     CREATE TABLE IF NOT EXISTS users (
       id VARCHAR NOT NULL PRIMARY KEY,
-      name VARCHAR NOT NULL,
+      name VARCHAR NOT NULL UNIQUE,
       status VARCHAR NOT NULL CHECK(status IN ('owner', 'player')),
       correct_ans INTEGER DEFAULT 0,
       wrong_ans INTEGER DEFAULT 0,
+      join_at INTEGER DEFAULT CURRENT_TIMESTAMP,
       currentRoomId VARCHAR REFERENCES rooms(id) ON DELETE SET NULL,
       FOREIGN KEY (currentRoomId) REFERENCES rooms(id) ON UPDATE CASCADE
-      join_at INTEGER DEFAULT CURRENT_TIMESTAMP,
     );
   `);
+    console.log("Table created successfully!");
   } catch (error) {
     console.log(error);
   }
 }
 
-async function addRoom(id, name, code, questionCount, execut_time = 10) {
-  try {
-    await db.query(sql`INSERT INTO rooms 
+//add data to tables
+async function addRoom(name, code, questionCount = 5, execut_time = 10) {
+  const id = uuidv4();
+  await db.query(sql`INSERT INTO rooms 
       (id, name, code, questionCount, execut_time) VALUES 
       (${id}, ${name}, ${code}, ${questionCount}, ${execut_time});`);
-  } catch (error) {
-    console.log(error);
-  }
+  return id;
 }
 async function addUser(id, name, status, currentRoomId) {
-  try {
-    await db.query(sql`INSERT INTO users 
+  await db.query(sql`INSERT INTO users 
       (id, name, status, currentRoomId) VALUES 
       (${id}, ${name}, ${status}, ${currentRoomId});`);
+  return id;
+}
+
+//get data from tables
+async function getRooms(id, name, code) {
+  try {
+    let results;
+    if (id) {
+      results = await db.query(sql`
+        SELECT * FROM rooms WHERE id=${id};
+      `);
+    } else if (code) {
+      results = await db.query(sql`
+        SELECT * FROM rooms WHERE code=${code};
+      `);
+    } else if (name) {
+      results = await db.query(sql`
+        SELECT * FROM rooms WHERE name=${name};
+      `);
+    } else {
+      results = await db.query(sql`SELECT * FROM rooms;`);
+    }
+    if (results.length) {
+      return results;
+    } else {
+      return undefined;
+    }
+  } catch (error) {
+    console.log("getRoomError", error);
+  }
+}
+async function getUser(id, name, currentRoomId) {
+  try {
+    let results;
+    if (id) {
+      results = await db.query(sql`
+        SELECT * FROM users WHERE id=${id};
+      `);
+    } else if (name) {
+      results = await db.query(sql`
+        SELECT * FROM users WHERE name=${name};
+      `);
+    } else if (currentRoomId) {
+      results = await db.query(sql`
+        SELECT * FROM users WHERE currentRoomId=${currentRoomId};
+      `);
+    } else {
+      results = await db.query(sql`
+        SELECT * FROM users;
+      `);
+    }
+    if (results.length) {
+      return results;
+    } else {
+      return undefined;
+    }
   } catch (error) {
     console.log(error);
   }
 }
 
-async function getRooms(id, code) {
-  const query = sql`SELECT * FROM rooms`;
-  if (id) {
-    query.append(sql`WHERE id = ${id}`);
-  } else if (code) {
-    query.append(sql`WHERE code = ${code}`);
+// update data non finished
+async function updateRoom(id, ...data) {
+  try {
+  } catch (error) {
+    console.log(error);
   }
-  return db.any(query);
-  // const results = await db.query(sql` SELECT value FROM app_data WHERE id=${id};`);
-  // if (results.length) {
-  //   return results[0].value;
-  // } else {
-  //   return undefined;
-  // }
 }
-async function getUser(id, code) {
-  const query = sql`SELECT * FROM rooms`;
-  if (id) {
-    query.append(sql`WHERE id = ${id}`);
-  } else if (code) {
-    query.append(sql`WHERE code = ${code}`);
+async function updateUser(id, ...data) {
+  try {
+  } catch (error) {
+    console.log(error);
   }
-  return db.any(query);
-  // const results = await db.query(sql` SELECT value FROM app_data WHERE id=${id};`);
-  // if (results.length) {
-  //   return results[0].value;
-  // } else {
-  //   return undefined;
-  // }
 }
 
-async function remove(id) {
-  await prepared;
+//remove
+async function removeRoom(id) {
   await db.query(sql`
-    DELETE FROM app_data WHERE id=${id};
+    DELETE FROM rooms WHERE id=${id};
   `);
 }
+async function removeUser(id) {
+  await db.query(sql`
+    DELETE FROM users WHERE id=${id};
+  `);
+}
+
+module.exports = {
+  initialTables,
+  addRoom,
+  addUser,
+  getRooms,
+  getUser,
+  removeRoom,
+  removeUser,
+};
 
 // async function run() {
 //   console.log(await get('name'));
@@ -104,9 +158,7 @@ async function remove(id) {
 //   process.exit(1);
 // });
 
-export { initialTables, addRoom, addUser };
-
-// const { v4: uuidv4 } = require('uuid');
+//
 // class Game {
 //     constructor(){
 //         this.games = []
