@@ -41,16 +41,16 @@ const subscribeBeforeStartEvents = (subAddUsr) => {
 
 const subscribeAfterStartEvents = (subAfterEv) => {
   if (!socket) return false;
-  // socket.on("question", (resData) => {
-  //   return subAfterEv(null, "gameSuccJoined", resData);
-  // });
-  socket.on("startGame", (resData) => {
-    return subAfterEv(null, "startGame", resData);
+  socket.on("gameStarting", (resData) => {
+    return subAfterEv(null, "gameStarting", resData);
+  });
+  socket.on("question", (resData) => {
+    return subAfterEv(null, "question", resData);
   });
 
-  // socket.on("endGame", (resData) => {
-  //   return subAfterEv(null, "addedUser", resData);
-  // });
+  socket.on("playerAnswered", (resData) => {
+    return subAfterEv(null, "playerAnswered", resData);
+  });
 };
 
 const createGame = (data) => {
@@ -63,6 +63,11 @@ const joinGame = (data) => {
   socket.emit("join", data);
 };
 
+const startGameEmit = (userId) => {
+  if (!socket) return false;
+  socket.emit("startGame", userId);
+};
+
 export {
   initiateConnect,
   disconnect,
@@ -71,6 +76,7 @@ export {
   subscribeAfterStartEvents,
   createGame,
   joinGame,
+  startGameEmit,
 };
 
 // const enterRoom = (data) => {

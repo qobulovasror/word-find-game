@@ -12,7 +12,7 @@ export default function Regis() {
     execut_time: 10,
   });
 
-  const submitForm = () => {
+  const submitForm = async () => {
     if (roomConfigs.username.length < 3 || roomConfigs.roomcode.length < 5) {
       return toast.error("Some inputs is invalid");
     }

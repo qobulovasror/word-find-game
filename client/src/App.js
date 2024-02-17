@@ -13,14 +13,13 @@ import {
 
 const Regis = lazy(() => import("./pages/Regis"));
 const Room = lazy(() => import("./pages/Room"));
-const Error404 = () => <div>Error 404</div>;
+const Error404 = () => <>Error 404</>;
 
 function App() {
-  const [data, setData] = useState(
-    JSON.parse(window.localStorage.getItem("game_data"))
-  );
+  const [data, setData] = useState(JSON.parse(window.localStorage.getItem("game_data")));
   const [gameStatus, setGameStatus] = useState(false); //postStart, preStart
   const [users, setUsers] = useState([]);
+  const [currentQuestion, setCurrentQuestion] = useState(null);
 
   useEffect(() => {
     initiateConnect();
@@ -39,6 +38,7 @@ function App() {
             window.localStorage.setItem("game_data", JSON.stringify(data));
             toast.success("The room successfull created");
             setData(data);
+            setUsers([data.user]);
             break;
           }
           case "gameSuccJoined": {
@@ -76,25 +76,19 @@ function App() {
         toast.error(err);
       } else {
         switch (event) {
-          case "gameSuccCreate": {
-            window.localStorage.setItem("game_data", JSON.stringify(data));
-            toast.success("The room successfull created");
-            setData(data);
+          case "gameStarting": {
+            console.log("gameStarting", data);
+            setGameStatus(Number(data))
             break;
           }
-          case "gameSuccJoined": {
-            toast.success("You successfull joined");
-            setData(data);
+          case "question": {
+            console.log(data);
+            setCurrentQuestion(data)
             break;
           }
-          case "leaveGame": {
-            toast.warning("Someone leave room");
-            setData(data);
-            break;
-          }
-          case "addedUser": {
-            toast.success("New user joined");
-            setUsers(data);
+          case "playerAnswered": {
+            // toast.success("You successfull joined");
+            // setData(data);
             break;
           }
           default:
@@ -103,24 +97,6 @@ function App() {
       }
     });
   }, [data]);
-
-  // const submitMessage = (e) => {
-  //   e.preventDefault();
-  //   const message = inputRef.current.value;
-  //   sendMessage({ message, roomName: CHAT_ROOM }, (cb) => {
-  //     // callback is acknowledgement from server
-  //     console.log(cb);
-  //     setMessages((prev) => [
-  //       ...prev,
-  //       {
-  //         message,
-  //         ...SENDER,
-  //       },
-  //     ]);
-  //     // clear the input after the message is sent
-  //     // inputRef.current.value = "";
-  //   });
-  // };
 
   return (
     <Suspense fallback={Error404}>
@@ -137,6 +113,8 @@ function App() {
                   users={users}
                   setUsers={setUsers}
                   gameStatus={gameStatus}
+                  setGameStatus={setGameStatus}
+                  currentQuestion={currentQuestion}
                 />
               ) : (
                 <Navigate to="/regis" replace />

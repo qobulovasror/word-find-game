@@ -6,9 +6,15 @@ const {
   getUser,
   removeUser,
   removeRoom,
-  startRoomGame
+  startRoomGame,
 } = require("../db/index");
-const { createVaidator, joinGameValidator, startGameFromOwner } = require("../db/validator");
+const {
+  createVaidator,
+  joinGameValidator,
+  startGameFromOwner,
+} = require("../db/validator");
+const irregularVerbs = require("../db/files/irregularVerb.json");
+const shuffle = require("../helper/shuffle");
 
 module.exports = (io) => {
   io.of("/api/game").on("connection", async (socket) => {
@@ -29,7 +35,6 @@ module.exports = (io) => {
           questionCount,
           execut_time
         );
-        console.log(roomcode, roomname, questionCount, execut_time, username);
         if (addedRoom) {
           addUser(socket.id, username, "owner", addedRoom).then(() => {
             socket.join(roomcode);
@@ -38,7 +43,7 @@ module.exports = (io) => {
               roomname: roomname,
               user: { name: username, id: socket.id, status: "owner" },
             });
-            io.of("/api/game").in(roomcode).emit("addedUser", [{name: username, id: socket.id, status: "owner" }]);
+            // io.of("/api/game").in(roomcode).emit("addedUser", [{name: username, id: socket.id, status: "owner" }]);
           });
         }
       } catch (error) {
@@ -72,18 +77,76 @@ module.exports = (io) => {
         const users = await getUser(null, null, addedRoomId[0].id);
         io.of("/api/game").in(roomcode).emit("addedUser", users);
       }
-
-      
     });
 
-    socket.on("startGame", async (data) => {
+    socket.on("startGame", async (userId) => {
+      console.log("userId", userId);
       const validRes = await startGameFromOwner(userId);
       if (validRes.error) {
         return socket.emit("errMsg", validRes.error.details[0].message);
       }
       const room = validRes.room;
       await startRoomGame(room.id);
-      io.of("/api/game").in(room.code).emit("startGame", users);
+      io.of("/api/game").in(room.code).emit("gameStarting", 5);
+      setTimeout(()=>{
+        runGiveQuest(room);
+      }, 5000)
+    });
+
+    const runGiveQuest = async (room) => {
+      const execut_time = room.execut_time;
+      const questions = [];
+
+      for (let i = 0; i < room.questionCount; i++) {
+        const randWord =
+          irregularVerbs[Math.floor(Math.random() * irregularVerbs.length)];
+        const randQuestItem = Math.floor(Math.random() * 2);
+        questions.push({
+          word: randWord.word,
+          quest: randQuestItem == 1 ? "ps" : "pp",
+          answers: shuffle([randWord.ps, randWord.pp, randWord.word]),
+          translation: randQuestItem.translation,
+        });
+      }
+
+      let i = 1;
+      io.of("/api/game")
+        .in(room.code)
+        .emit("question", {
+          question: questions[i-1],
+          config: {
+            questionCount: room.questionCount,
+            currentTest: i,
+            execut_time: room.execut_time,
+          },
+        });
+      const intervalId = setInterval(() => {
+        io.of("/api/game")
+          .in(room.code)
+          .emit("question", {
+            question: questions[i],
+            config: {
+              questionCount: room.questionCount,
+              currentTest: i + 1,
+              execut_time: room.execut_time,
+            },
+          });
+        ++i;
+        if (i == questions.length) {
+          clearInterval(intervalId);
+        }
+      }, execut_time * 1000);
+    };
+
+    socket.on("answer", async (data) => {
+      const userReting = [];
+      const reqData = typeof data == "string" ? JSON.parse(data) : data;
+      console.log(reqData);
+      const {roomId, userId, question, answer} = reqData;
+
+      io.of("/api/game")
+        .in(room.code)
+        .emit("playerAnswered", { question: "questions[i]" });
     });
 
     // Socket yopilganda
@@ -93,10 +156,10 @@ module.exports = (io) => {
         const roomId = leavedUser[0]?.currentRoomId;
         await removeUser(socket.id);
         const users = await getUser(null, null, roomId);
-        if(users?.length > 0){
+        if (users?.length > 0) {
           const roomcode = await getRooms(roomId);
           io.of("/api/game").in(roomcode[0].code).emit("leaveGame", users);
-        }else{
+        } else {
           //if all user left in room
           await removeRoom(roomId);
         }

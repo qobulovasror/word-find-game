@@ -1,5 +1,5 @@
 const route = require("express").Router();
-const verbs = require('../db/files/verb.json');
+const verbs = require('../db/files/irregularVerb.json');
 
 route.get("/", (req, res) => {
   try {
