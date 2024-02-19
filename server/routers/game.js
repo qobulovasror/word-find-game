@@ -13,8 +13,9 @@ const {
   joinGameValidator,
   startGameFromOwner,
 } = require("../db/validator");
-const irregularVerbs = require("../db/files/irregularVerb.json");
+const irregularVerbs = require("../db/files/random_verbs.json");
 const shuffle = require("../helper/shuffle");
+const generateVerb = require('../helper/generateVerb')
 
 module.exports = (io) => {
   io.of("/api/game").on("connection", async (socket) => {
@@ -95,20 +96,8 @@ module.exports = (io) => {
 
     const runGiveQuest = async (room) => {
       const execut_time = room.execut_time;
-      const questions = [];
-
-      for (let i = 0; i < room.questionCount; i++) {
-        const randWord =
-          irregularVerbs[Math.floor(Math.random() * irregularVerbs.length)];
-        const randQuestItem = Math.floor(Math.random() * 2);
-        questions.push({
-          word: randWord.word,
-          quest: randQuestItem == 1 ? "ps" : "pp",
-          answers: shuffle([randWord.ps, randWord.pp, randWord.word]),
-          translation: randQuestItem.translation,
-        });
-      }
-
+      const questions = generateVerb(room.questionCount)
+      
       let i = 1;
       io.of("/api/game")
         .in(room.code)
@@ -139,10 +128,9 @@ module.exports = (io) => {
     };
 
     socket.on("answer", async (data) => {
-      const userReting = [];
       const reqData = typeof data == "string" ? JSON.parse(data) : data;
       console.log(reqData);
-      const {roomId, userId, question, answer} = reqData;
+      const {roomcode, userId, question, answer} = reqData;
 
       io.of("/api/game")
         .in(room.code)

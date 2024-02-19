@@ -68,6 +68,11 @@ const startGameEmit = (userId) => {
   socket.emit("startGame", userId);
 };
 
+const sendAnswer = (data) => {
+  if (!socket) return false;
+  socket.emit("answer", data);
+};
+
 export {
   initiateConnect,
   disconnect,
@@ -77,6 +82,8 @@ export {
   createGame,
   joinGame,
   startGameEmit,
+  sendAnswer,
+  
 };
 
 // const enterRoom = (data) => {

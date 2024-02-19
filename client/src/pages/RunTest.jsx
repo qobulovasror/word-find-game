@@ -2,12 +2,13 @@ import imgGold from "../assets/imgs/gold.png";
 import imgSilver from "../assets/imgs/silver.png";
 import imgbronz from "../assets/imgs/bronz.png";
 import { useEffect, useState } from "react";
+import { sendAnswer } from "../socket";
 
 export default function RunTest(props) {
   const { data, setData, users, currentQuestion } = props;
   const [oldQuest, setOldQuest] = useState(currentQuestion)
   const [showRateWin, setShowRateWin] = useState(false);
-  const [check, setCheck] = useState(false);
+  const [check, setCheck] = useState("");
   const [progress, setProgress] = useState(
     currentQuestion?.config?.execut_time
   );
@@ -19,7 +20,18 @@ export default function RunTest(props) {
       window.location.reload();
     }
   };
-
+  const handleSubmit = () => {
+    if(check){
+      console.log(
+        {
+          roomcode: data.roomcode,
+          userId: data.user.id, 
+          question: currentQuestion?.question, 
+          answer: check
+        });
+      // sendAnswer()
+    }
+  }
   useEffect(() => {
     const interval = setInterval(() => {
       setProgress((prevProgress) => prevProgress - 0.5);
@@ -42,9 +54,10 @@ export default function RunTest(props) {
       clearInterval(interval);
     };
   }, [currentQuestion, oldQuest, progress]);
-//   useEffect(()=>{
-//     setOldQuest(currentQuestion)
-//   }, [currentQuestion])
+
+  useEffect(()=>{
+    setCheck("")
+  }, [currentQuestion])
   return (
     <>
       <div
@@ -166,6 +179,7 @@ export default function RunTest(props) {
                       type="radio"
                       name="flexRadioDefault"
                       id={quest + index}
+                      checked={check===quest}
                       onChange={() => setCheck(quest)}
                     />
                     <label
@@ -173,16 +187,10 @@ export default function RunTest(props) {
                       htmlFor={quest + index}
                     >
                       {quest}
-                      {/* <span
-                        className="badge text-bg-primary"
-                        style={{ height: "22px", marginTop: "2px" }}
-                      >
-                        1
-                      </span> */}
                     </label>
                   </li>
                 ))}
-                <button className="btn btn-success" disabled={!check}>
+                <button className="btn btn-success" disabled={!check} onClick={handleSubmit}>
                   Submit
                 </button>
               </ul>

@@ -1,8 +1,8 @@
-const irregularVerbs = require("./db/files/irregularVerb.json");
-const shuffle = require("./helper/shuffle");
+const irregularVerbs = require("../db/files/irregularVerb.json");
+const shuffle = require("./shuffle");
 const fs = require('fs'); 
 
-const runGiveQuest = (count) => {
+const generateVerb = (count) => {
   const questions = [];
 
   for (let i = 0; i < count; i++) {
@@ -47,11 +47,5 @@ const runGiveQuest = (count) => {
   return questions;
 };
 
-const data = runGiveQuest(irregularVerbs.length);
 
-console.log(data.length);
-console.log(data);
-
-fs.writeFile('random_verbs.json', JSON.stringify(data), "utf-8", err=>{
-    err && console.log(err);
-});
+module.exports = generateVerb;

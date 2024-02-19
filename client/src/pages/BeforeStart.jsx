@@ -26,7 +26,7 @@ export default function BeforeStart(props) {
   useEffect(() => {
     if (!gameStatus) return;
     const interval = setInterval(() => {
-      if (time === 0) {
+      if (time === 1) {
         clearInterval(interval);
         setGameStatus("start");
       }
