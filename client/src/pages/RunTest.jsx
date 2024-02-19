@@ -5,9 +5,10 @@ import { useEffect, useState } from "react";
 import { sendAnswer } from "../socket";
 
 export default function RunTest(props) {
-  const { data, setData, users, currentQuestion } = props;
+  const { data, users, currentQuestion } = props;
   const [oldQuest, setOldQuest] = useState(currentQuestion)
   const [showRateWin, setShowRateWin] = useState(false);
+  const [sendBtnActive, setSendBtnActive] = useState(true)
   const [check, setCheck] = useState("");
   const [progress, setProgress] = useState(
     currentQuestion?.config?.execut_time
@@ -22,14 +23,14 @@ export default function RunTest(props) {
   };
   const handleSubmit = () => {
     if(check){
-      console.log(
+      sendAnswer(
         {
           roomcode: data.roomcode,
           userId: data.user.id, 
-          question: currentQuestion?.question, 
-          answer: check
+          isCorrect: String(currentQuestion.question.currect)===String(check), 
+          time: progress
         });
-      // sendAnswer()
+        setSendBtnActive(false)
     }
   }
   useEffect(() => {
@@ -57,6 +58,7 @@ export default function RunTest(props) {
 
   useEffect(()=>{
     setCheck("")
+    setSendBtnActive(true)
   }, [currentQuestion])
   return (
     <>
@@ -164,10 +166,7 @@ export default function RunTest(props) {
               </div>
               <div className="card bg-light mt-2">
                 <p className="fs-5 text-center text-muted fw-bold pt-3 ps-3">
-                  Base form: {currentQuestion.question.word} <br />
-                  {currentQuestion.question.quest === "ps"
-                    ? "Past simple (V2): ... ?"
-                    : "Past participle (V3): ... ?"}
+                  {currentQuestion.question.quest}
                 </p>
               </div>
               <ul className="list-group d-flex flex-column p-3">
@@ -190,7 +189,7 @@ export default function RunTest(props) {
                     </label>
                   </li>
                 ))}
-                <button className="btn btn-success" disabled={!check} onClick={handleSubmit}>
+                <button className="btn btn-success" disabled={!check || !sendBtnActive} onClick={handleSubmit}>
                   Submit
                 </button>
               </ul>

@@ -7,13 +7,15 @@ const {
   removeUser,
   removeRoom,
   startRoomGame,
+  updateGradeUser,
 } = require("../db/index");
 const {
   createVaidator,
   joinGameValidator,
   startGameFromOwner,
+  answerValidator,
 } = require("../db/validator");
-const irregularVerbs = require("../db/files/random_verbs.json");
+const irregularVerbs = require("../db/files/irregularVerb.json");
 const shuffle = require("../helper/shuffle");
 const generateVerb = require('../helper/generateVerb')
 
@@ -97,7 +99,7 @@ module.exports = (io) => {
     const runGiveQuest = async (room) => {
       const execut_time = room.execut_time;
       const questions = generateVerb(room.questionCount)
-      
+
       let i = 1;
       io.of("/api/game")
         .in(room.code)
@@ -129,12 +131,22 @@ module.exports = (io) => {
 
     socket.on("answer", async (data) => {
       const reqData = typeof data == "string" ? JSON.parse(data) : data;
-      console.log(reqData);
-      const {roomcode, userId, question, answer} = reqData;
+      const validRes = await answerValidator(reqData);
+        if (validRes.error) {
+          return socket.emit("errMsg", validRes.error.details[0].message);
+      }
+      const {roomcode, userId, isCorrect, time} = reqData;
+      let users = []
+      if(isCorrect){
+        users = await updateGradeUser(userId, 1+time*0.2, roomcode);
+      }else{
+        users = await getUser(null, null, roomcode)
+      }
+      console.log(users);
 
       io.of("/api/game")
-        .in(room.code)
-        .emit("playerAnswered", { question: "questions[i]" });
+        .in(roomcode)
+        .emit("playerAnswered", { users: users, answerOwner: userId });
     });
 
     // Socket yopilganda

@@ -77,7 +77,6 @@ function App() {
       } else {
         switch (event) {
           case "gameStarting": {
-            console.log("gameStarting", data);
             setGameStatus(Number(data))
             break;
           }
@@ -87,8 +86,8 @@ function App() {
             break;
           }
           case "playerAnswered": {
-            // toast.success("You successfull joined");
-            // setData(data);
+            setUsers(data.users)
+            console.log(users);
             break;
           }
           default:

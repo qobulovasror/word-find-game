@@ -65,8 +65,34 @@ const startGameFromOwner = async (userId) => {
 }
 
 
+const answerReqValidator = (data) => {
+    const answerReqValidatorSchema = Joi.object({
+        roomcode: Joi.string().required().min(6).max(15),
+        userId: Joi.string().required().min(4).max(50),
+        isCorrect: Joi.boolean().required(),
+        time: Joi.number().required(),
+    })
+}
+const answerValidator = async (data) => {
+    const valData  = answerReqValidator(data);
+    if(valData?.error) return valData;
+
+
+    const isGameRunning = await getRooms(null, null, data.roomcode);
+    if(isGameRunning[0].roomState==0) 
+        return {error: {details: [{message: 'This room isn\'t playing'}]}}
+    
+    const isUserJoinThisRoom = await getUser(data.userId);
+    if(isUserJoinThisRoom[0].currentRoomId!=isGameRunning[0].id) 
+        return {error: {details: [{message: 'You  aren\'t in this game'}]}}
+
+    return {}
+}
+
+
 module.exports = {
     createVaidator,
     joinGameValidator,
-    startGameFromOwner
+    startGameFromOwner,
+    answerValidator
 }

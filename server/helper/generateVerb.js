@@ -38,7 +38,7 @@ const generateVerb = (count) => {
     }
 
     questions.push({
-      quest: `Base form: "${randWord.word}", ${randQuestItem == 1 ? "Past simple" : "Past participle"}: ... ?`,
+      quest: `Base form: "${randWord.word}", ${randQuestItem == 1 ? "Past simple (V2)" : "Past participle (V3)"}: ... ?`,
       answers: shuffle(answers),
       currect: randQuestItem == 1 ? randWord.ps : randWord.pp,
       translation: randWord.translation.Uzbek,
