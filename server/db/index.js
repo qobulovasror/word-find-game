@@ -130,14 +130,16 @@ async function updateUser(id, ...data) {
     console.log(error);
   }
 }
-async function updateGradeUser(id, grade, roomcode) {
+async function updateGradeUser(id, grade, roomId) {
+  const userdata  = await getUser(id);
+  let oldgrade = userdata[0].grade;
   await db.query(sql`
   UPDATE users
   SET (grade)
-  = (${grade})
+  = (${grade+oldgrade})
   WHERE id=${id}
   `);
-  const users = await getUser(null, null, roomcode)
+  const users = await getUser(null, null, roomId)
   return users
 }
 

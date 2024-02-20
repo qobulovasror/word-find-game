@@ -5,11 +5,12 @@ import { useEffect, useState } from "react";
 import { sendAnswer } from "../socket";
 
 export default function RunTest(props) {
-  const { data, users, currentQuestion } = props;
+  const { data, users, currentQuestion, endQuiz } = props;
   const [oldQuest, setOldQuest] = useState(currentQuestion)
   const [showRateWin, setShowRateWin] = useState(false);
   const [sendBtnActive, setSendBtnActive] = useState(true)
   const [check, setCheck] = useState("");
+  const [viewResult, setViewResult] = useState(false)
   const [progress, setProgress] = useState(
     currentQuestion?.config?.execut_time
   );
@@ -31,6 +32,7 @@ export default function RunTest(props) {
           time: progress
         });
         setSendBtnActive(false)
+        setViewResult(true)
     }
   }
   useEffect(() => {
@@ -44,22 +46,25 @@ export default function RunTest(props) {
         setProgress(currentQuestion?.config?.execut_time);
       }
     }, 500);
-    if (
-      Number(currentQuestion.config.currentTest) ===
-      Number(currentQuestion.config.questionCount)
-    ) {
+    if (endQuiz) {
         setProgress(0.3)
       clearInterval(interval);
     }
     return () => {
       clearInterval(interval);
     };
-  }, [currentQuestion, oldQuest, progress]);
+  }, [currentQuestion, endQuiz, oldQuest, progress]);
 
   useEffect(()=>{
     setCheck("")
     setSendBtnActive(true)
+    setViewResult(false)
   }, [currentQuestion])
+  useEffect(()=>{
+    if(endQuiz){
+      setShowRateWin(true)
+    }
+  }, [endQuiz])
   return (
     <>
       <div
@@ -85,35 +90,36 @@ export default function RunTest(props) {
                   <tr>
                     <th scope="col">#</th>
                     <th scope="col">Name</th>
-                    <th scope="col">rating</th>
-                    <th scope="col">place</th>
+                    <th scope="col">points</th>
+                    {
+                      endQuiz &&
+                      <th scope="col">place</th>
+                    }
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <th scope="row">1</th>
-                    <td>Mark</td>
-                    <td>1</td>
-                    <td>
-                      <img src={imgGold} alt="medal" width="30px" />
-                    </td>
-                  </tr>
-                  <tr>
-                    <th scope="row">1</th>
-                    <td>Mark</td>
-                    <td>2</td>
-                    <td>
-                      <img src={imgSilver} alt="medal" width="30px" />
-                    </td>
-                  </tr>
-                  <tr>
-                    <th scope="row">1</th>
-                    <td>Mark</td>
-                    <td>3</td>
-                    <td>
-                      <img src={imgbronz} alt="medal" width="30px" />
-                    </td>
-                  </tr>
+                  {
+                    users.sort((a, b)=> a.grade<b.grade?1:-1).map((user, index) => (
+                      <tr key={index}>
+                        <th scope="row">{index+1}</th>
+                        <td>{user.name} {data.user.name===user.name && " (You)"}</td>
+                        <td>{Number(user.grade).toFixed(3)}</td>
+                        {
+                          endQuiz &&
+                           <td>
+                            {index===0 && <img src={imgGold} alt="medal" width="30px" />} 
+                            {index===1 && <img src={imgSilver} alt="medal" width="30px"/> } 
+                            {index===2 && <img src={imgbronz} alt="medal" width="30px" /> }
+                          </td>
+                        }
+                        {/*<td>
+                            <img src={imgGold} alt="medal" width="30px" />
+                            <img src={imgSilver} alt="medal" width="30px" />
+                            <img src={imgbronz} alt="medal" width="30px" />
+                          </td>*/}
+                      </tr>
+                    ))
+                  }
                 </tbody>
               </table>
               <div className="d-flex justify-content-end">
@@ -165,12 +171,33 @@ export default function RunTest(props) {
                 ></div>
               </div>
               <div className="card bg-light mt-2">
-                <p className="fs-5 text-center text-muted fw-bold pt-3 ps-3">
+                <p className="fs-5 text-center text-muted fw-bold pt-3 px-2" style={{wordWrap: "break-word"}}>
                   {currentQuestion.question.quest}
                 </p>
               </div>
               <ul className="list-group d-flex flex-column p-3">
-                {currentQuestion.question.answers.map((quest, index) => (
+                {currentQuestion.question.answers.map((quest, index) => {
+                  let answersClassStyle = ""
+                  if(viewResult){
+                    if(quest===check || currentQuestion.question.currect === quest){
+                      if(quest===check && currentQuestion.question.currect === check)
+                        answersClassStyle =  "bg-success text-light";
+                      else{
+                        if(quest===check && currentQuestion.question.currect !== check)
+                          answersClassStyle =  "bg-danger text-light";
+                        else if(currentQuestion.question.currect === quest)
+                          answersClassStyle =  "bg-success text-light";
+                      }
+                    }
+
+                    // if(quest===check && currentQuestion.question.currect === check)
+                    //   answersClassStyle =  "bg-success text-light";
+                    // else if(quest===check && quest.currect !== check)
+                    //   answersClassStyle =  "bg-danger text-light";
+                    // else if(quest===check)
+                    //   answersClassStyle =  "bg-success text-light";
+                  }
+                  return (
                   <li key={index} className="form-check d-flex justify-content-start p-0 ">
                     <input
                       className="form-check-input"
@@ -180,15 +207,16 @@ export default function RunTest(props) {
                       id={quest + index}
                       checked={check===quest}
                       onChange={() => setCheck(quest)}
+                      disabled={!sendBtnActive}
                     />
                     <label
-                      className="form-check-label border px-3 py-2 my-2 rounded w-100 d-flex justify-content-between"
+                      className={"form-check-label border px-3 py-2 my-2 rounded w-100 d-flex justify-content-between "+answersClassStyle}
                       htmlFor={quest + index}
                     >
                       {quest}
                     </label>
                   </li>
-                ))}
+                )})}
                 <button className="btn btn-success" disabled={!check || !sendBtnActive} onClick={handleSubmit}>
                   Submit
                 </button>
@@ -204,7 +232,7 @@ export default function RunTest(props) {
                     id="flexRadioDefault1"
                   />
                   <label
-                    className="bg-success text-light form-check-label border px-3 py-2 my-2 rounded w-100 d-flex justify-content-between"
+                    className=" form-check-label border px-3 py-2 my-2 rounded w-100 d-flex justify-content-between"
                     htmlFor="flexRadioDefault1"
                   >
                     Default radio
@@ -240,7 +268,7 @@ export default function RunTest(props) {
               </ul>
               <div className="d-flex justify-content-around mt-2">
                 <div className="col-5">
-                  <div className="d-flex">
+                  <div className="d-flex d-none">
                     <div
                       className="bg-secondary border rounded-circle text-light text-center hover-index"
                       style={{

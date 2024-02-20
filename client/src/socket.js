@@ -51,6 +51,10 @@ const subscribeAfterStartEvents = (subAfterEv) => {
   socket.on("playerAnswered", (resData) => {
     return subAfterEv(null, "playerAnswered", resData);
   });
+
+  socket.on("endQuiz", (resData) => {
+    return subAfterEv(null, "endQuiz", resData);
+  });
 };
 
 const createGame = (data) => {

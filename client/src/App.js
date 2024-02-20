@@ -20,6 +20,7 @@ function App() {
   const [gameStatus, setGameStatus] = useState(false); //postStart, preStart
   const [users, setUsers] = useState([]);
   const [currentQuestion, setCurrentQuestion] = useState(null);
+  const [endQuiz, setEndQuiz] = useState(false)
 
   useEffect(() => {
     initiateConnect();
@@ -81,13 +82,16 @@ function App() {
             break;
           }
           case "question": {
-            console.log(data);
             setCurrentQuestion(data)
             break;
           }
           case "playerAnswered": {
             setUsers(data.users)
-            console.log(users);
+            break;
+          }
+          case "endQuiz": {
+            setEndQuiz(true)
+            setUsers(data.users)
             break;
           }
           default:
@@ -95,7 +99,7 @@ function App() {
         }
       }
     });
-  }, [data]);
+  }, [data, users]);
 
   return (
     <Suspense fallback={Error404}>
@@ -114,6 +118,7 @@ function App() {
                   gameStatus={gameStatus}
                   setGameStatus={setGameStatus}
                   currentQuestion={currentQuestion}
+                  endQuiz={endQuiz}
                 />
               ) : (
                 <Navigate to="/regis" replace />
