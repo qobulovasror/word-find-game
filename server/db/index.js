@@ -159,7 +159,7 @@ async function removeUserByRoomId(currentRoomId) {
   await db.query(sql`
     DELETE FROM users WHERE currentRoomId=${currentRoomId};
   `);
-  return id;
+  return currentRoomId;
 }
 
 module.exports = {
