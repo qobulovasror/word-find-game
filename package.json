@@ -1,0 +1,12 @@
+{
+  "name": "word-find-game",
+  "version": "1.0.0",
+  "description": "This project is a word-finding game similar to kahoot",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

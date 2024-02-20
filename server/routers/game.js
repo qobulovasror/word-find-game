@@ -47,7 +47,6 @@ module.exports = (io) => {
               roomname: roomname,
               user: { name: username, id: socket.id, status: "owner" },
             });
-            // io.of("/api/game").in(roomcode).emit("addedUser", [{name: username, id: socket.id, status: "owner" }]);
           });
         }
       } catch (error) {
