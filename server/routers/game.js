@@ -8,6 +8,7 @@ const {
   removeRoom,
   startRoomGame,
   updateGradeUser,
+  removeUserByRoomId
 } = require("../db/index");
 const {
   createVaidator,
@@ -124,15 +125,23 @@ module.exports = (io) => {
         ++i;
         if (i == questions.length) {
           clearInterval(intervalId);
-          setTimeout(async()=>{
-            const users = await getUser(null, null, room.id)
-            io.of("/api/game")
-              .in(room.code)
-              .emit("endQuiz", { users });
-          }, execut_time * 1000)
+          endGame(room)
         }
       }, execut_time * 1000);
     };
+
+    const endGame = async(room) => {
+      setTimeout(async()=>{
+        const users = await getUser(null, null, room.id)
+        io.of("/api/game")
+          .in(room.code)
+          .emit("endQuiz", { users });
+
+        //delete users and room
+        await removeUserByRoomId(room.id)
+        await removeRoom(room.id);
+      }, execut_time * 1000)
+    }
 
     socket.on("answer", async (data) => {
       const reqData = typeof data == "string" ? JSON.parse(data) : data;

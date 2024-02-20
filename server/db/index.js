@@ -155,6 +155,12 @@ async function removeUser(id) {
   `);
   return id;
 }
+async function removeUserByRoomId(currentRoomId) {
+  await db.query(sql`
+    DELETE FROM users WHERE currentRoomId=${currentRoomId};
+  `);
+  return id;
+}
 
 module.exports = {
   initialTables,
@@ -166,4 +172,5 @@ module.exports = {
   removeUser,
   startRoomGame,
   updateGradeUser,
+  removeUserByRoomId
 };
