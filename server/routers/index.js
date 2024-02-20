@@ -12,7 +12,7 @@ module.exports = function(app, io){
     app.use(express.urlencoded({extended: true}))
     app.set("view engine", "ejs")
 
-    app.use("/", home);
+    // app.use("/", home);
     app.use("/api/game", game(io));
     app.use("/api/vers", verb)
 
