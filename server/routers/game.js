@@ -125,12 +125,12 @@ module.exports = (io) => {
         ++i;
         if (i == questions.length) {
           clearInterval(intervalId);
-          endGame(room)
+          endGame(room, execut_time)
         }
       }, execut_time * 1000);
     };
 
-    const endGame = async(room) => {
+    const endGame = async(room, execut_time) => {
       setTimeout(async()=>{
         const users = await getUser(null, null, room.id)
         io.of("/api/game")
